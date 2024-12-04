@@ -43,7 +43,7 @@ function! Timer(args)
     return
   endif
   call timer_start(split(a:args, ' ')[0],
-        \ {->execute(a:args[len(split(a:args, ' ')[0]):], '')})
+        \ {->execute('Do '.a:args[len(split(a:args, ' ')[0]):], '')})
 endfunction
 
 function! dothen#_as_do(text)
