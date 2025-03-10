@@ -47,14 +47,14 @@ function! Timer(args)
 endfunction
 
 function! dothen#_as_do(text)
-  let s:command = split(a:text)
-  if len(s:command) == 0
+  let command = split(a:text)
+  if len(command) == 0
     return ''
-  elseif s:command[0] == 'Do'
+  elseif command[0] == 'Do'
     return a:text
-  elseif s:command[0] == 'Sh'
+  elseif command[0] == 'Sh'
     return a:text
-  elseif s:command[0] == 'Timer'
+  elseif command[0] == 'Timer'
     return a:text
   endif
   return 'Do '.a:text
@@ -71,28 +71,28 @@ endfunction
 
 func! Sh(args)
   let g:DothenBuffer = []
-  let s:commands = split(a:args, g:dothen#sep)
-  let s:callback = len(s:commands) > 1 ? dothen#_next_to_then(a:args) : ''
+  let commands = split(a:args, g:dothen#sep)
+  let callback = len(commands) > 1 ? dothen#_next_to_then(a:args) : ''
   if has('nvim')
-    call jobstart(['sh', '-c', s:commands[0]],
-        \{'on_exit': {j,d,e->([dothen#_as_do(s:callback)])},
+    call jobstart(['sh', '-c', commands[0]],
+        \{'on_exit': {j,d,e->execute([dothen#_as_do(callback)], '')},
         \'on_stdout': {j,d,e->dothen#_receive_nvim(d)}})
   else
-    call job_start(s:commands[0],
-        \{'close_cb': {x->execute([dothen#_as_do(s:callback)], '')},
+    call job_start(commands[0],
+        \{'close_cb': {x->execute([dothen#_as_do(callback)], '')},
         \'out_cb': function('dothen#_receive')})
   endif
 endfunction
 
 function! dothen#_putchar(char, line, col)
-  let s:string = getline(a:line)
+  let string = getline(a:line)
   if a:col <= 0
-    call setline(a:line, a:char. s:string[len(a:char):])
+    call setline(a:line, a:char. string[len(a:char):])
   elseif len(getline(a:line)) > a:col
-    let s:string = s:string[:a:col-1].a:char.s:string[a:col+len(a:char):]
-    call setline(a:line, s:string)
+    let string = string[:a:col-1].a:char.string[a:col+len(a:char):]
+    call setline(a:line, string)
   else
-    call setline(a:line, s:string .repeat(' ',(a:col - len(s:string))) .a:char)
+    call setline(a:line, string .repeat(' ',(a:col - len(string))) .a:char)
   endif
 endfunction
 
@@ -101,33 +101,33 @@ function! PutLine(line, text)
 endfunction
 
 function! PutLines(line, text)
-  let s:put_line = a:line
+  let put_line = a:line
   for t in a:text
-    call setline(line('.') + s:put_line, t)
-    let s:put_line = s:put_line + 1
+    call setline(line('.') + put_line, t)
+    let put_line = put_line + 1
   endfor
 endfunction
 
 function! FadeInText(line, text, col=0, sep=50)
-  let s:time = 0
-  let s:col = a:col
-  let s:line = line('.') + a:line
+  let time = 0
+  let col = a:col
+  let line = line('.') + a:line
   for t in a:text
-    call dothen#_timer_func(s:time * a:sep,
-          \['dothen#_putchar', t, s:line, s:col])
-    let s:time = s:time + 1
-    let s:col = s:col + len(t)
+    call dothen#_timer_func(time * a:sep,
+          \['dothen#_putchar', t, line, col])
+    let time = time + 1
+    let col = col + len(t)
   endfor
 endfunction
 
 function! FadeInLines(line, texts, col=0, sep=50)
-  let s:multi_line = a:line
-  let s:wait_time = 0
+  let multi_line = a:line
+  let wait_time = 0
   for text in a:texts
-    call dothen#_timer_func(s:wait_time,
-          \['FadeInText', s:multi_line, text, a:col, a:sep])
-    let s:wait_time = s:wait_time + a:sep * strchars(text)
-    let s:multi_line = s:multi_line + 1
+    call dothen#_timer_func(wait_time,
+          \['FadeInText', multi_line, text, a:col, a:sep])
+    let wait_time = wait_time + a:sep * strchars(text)
+    let multi_line = multi_line + 1
   endfor
 endfunction
 
